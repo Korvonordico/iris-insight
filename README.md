@@ -4,7 +4,13 @@
 
 Lets an AI agent see a running game: a cheap mosaic of the last frames plus a short log, so it can tell a freeze from a long load, spot a slowdown and point at the frame where the picture broke.
 
-Version 0.0.1, private draft. Part of F-AGI, next to Token Tranche (resources) and Psyche Map (memory & knowledge).
+Version 0.0.1, private draft.
+
+Iris Insight is a complete tool and works on its own: you can add it to a game without anything else. It is also one module of [F-AGI](https://github.com/Korvonordico/f-agi), a set of tools that work together around an AI agent:
+
+- [Psyche Map](https://github.com/Korvonordico/psyche-map) - memory & knowledge
+- [Token Tranche](https://github.com/Korvonordico/quotient-claude-tokens) (now called Quotient) - prudence & measure
+- Iris Insight - sight & understanding
 
 ## How it works, in short
 
