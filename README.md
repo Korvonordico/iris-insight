@@ -4,7 +4,7 @@
 
 Lets an AI agent see a running game: a cheap mosaic of the last frames plus a short log, so it can tell a freeze from a long load, spot a slowdown and point at the frame where the picture broke.
 
-Version 0.0.1, private draft.
+Version 0.0.1, early version.
 
 Iris Insight is a complete tool and works on its own: you can add it to a game without anything else. It is also one module of [F-AGI](https://github.com/Korvonordico/f-agi), a set of tools that work together around an AI agent. Modules used to build Iris Insight:
 
@@ -29,6 +29,10 @@ The freeze on a loading screen was recognized 3 out of 3 times with the summary,
 
 ## Status
 
-Tested only on Windows and on one game. No license yet: all rights reserved until one is chosen.
+Tested only on Windows and on one game.
+
+## License
+
+[PolyForm Noncommercial 1.0.0](LICENSE): free for people and non-commercial use. Companies that want to use it commercially, please get in touch for a commercial license.
 
 Made with AI. I am not a programmer; sorry for the mistakes, and issues are welcome.
