@@ -1,0 +1,30 @@
+diff --git a/ps2xRuntime/src/lib/ps2_runtime.cpp b/ps2xRuntime/src/lib/ps2_runtime.cpp
+index 4ff6839..4a35cae 100644
+--- a/ps2xRuntime/src/lib/ps2_runtime.cpp
++++ b/ps2xRuntime/src/lib/ps2_runtime.cpp
+@@ -419,6 +419,8 @@ static void sorAvviaUscitaAudio()
+ uint64_t sorAudioConsegnati() { return g_sorAudioDati; }
+ uint64_t sorAudioVuoti() { return g_sorAudioVuoti; }
+ std::atomic<bool> g_sorFotoSubito{false};   // sor: comando "foto" del telecomando delle prove
++void sorBlackboxFrame(const uint8_t *rgba, uint32_t width, uint32_t height); // sor: pc/sor_blackbox.cpp
++void sorBlackboxClosing();
+ 
+ static void UploadFrame(Texture2D &tex, PS2Runtime *rt, uint32_t &outWidth, uint32_t &outHeight)
+ {
+@@ -498,6 +500,8 @@ static void UploadFrame(Texture2D &tex, PS2Runtime *rt, uint32_t &outWidth, uint
+     s_lastHeight = height;
+ 
+     g_sorContaPresent.fetch_add(1, std::memory_order_relaxed);
++    if (!s_scratch.empty() && s_scratch.size() >= static_cast<size_t>(width) * height * 4u) // sor: blackbox
++        sorBlackboxFrame(s_scratch.data(), width, height);
+     // sor: SOR_FOTO=<prefisso> salva il fotogramma presentato come <prefisso>_NN.png ogni
+     // SOR_FOTO_OGNI secondi (predefinito 5), con l'alfa a 255.
+     {
+@@ -2567,6 +2571,7 @@ void PS2Runtime::run()
+ 
+         if (WindowShouldClose())
+         {
++            sorBlackboxClosing();
+             RUNTIME_LOG("[run] window close requested, breaking out of loop");
+             requestStop();
+             break;
