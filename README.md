@@ -6,9 +6,8 @@ Lets an AI agent see a running game: a cheap mosaic of the last frames plus a sh
 
 Version 0.0.1, private draft.
 
-Iris Insight is a complete tool and works on its own: you can add it to a game without anything else. It is also one module of [F-AGI](https://github.com/Korvonordico/f-agi), a set of tools that work together around an AI agent:
+Iris Insight is a complete tool and works on its own: you can add it to a game without anything else. It is also one module of [F-AGI](https://github.com/Korvonordico/f-agi), a set of tools that work together around an AI agent. Modules used to build Iris Insight:
 
-- [Psyche Map](https://github.com/Korvonordico/psyche-map) - memory & knowledge
 - [Token Tranche](https://github.com/Korvonordico/quotient-claude-tokens) (now called Quotient) - prudence & measure
 - Iris Insight - sight & understanding
 
