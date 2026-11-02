@@ -97,7 +97,7 @@ namespace
             std::snprintf(out, n, "none");
     }
 
-    // Shadow of Rome's own variables (LAVORO, Tappa 6): area (half word at 0x4be2e8) and scene (0x4be2e0).
+    // Shadow of Rome's own variables: area (half word at 0x4be2e8) and scene (0x4be2e0).
     void scene(char *out, size_t n)
     {
         PS2Runtime *rt = g_runtime.load();
@@ -159,13 +159,19 @@ namespace
 {
     PS2Runtime::RecompiledFunction g_cdRead = nullptr;
     uint32_t g_nextSector = 0;
+    std::chrono::steady_clock::time_point g_lastLoadLine;
 
-    // Every disc read of the game; one line for each run of reads that follow one another.
+    // Every disc read of the game: one line for each run of reads that follow one another, and one every
+    // 0.25 s inside a long run, so that a long load shows as reads that continue.
     void cdRead(uint8_t *rdram, R5900Context *ctx, PS2Runtime *rt)
     {
         const uint32_t sector = GPR_U32(ctx, 4), count = GPR_U32(ctx, 5);
-        if (sector != g_nextSector)
+        const auto now = std::chrono::steady_clock::now();
+        if (sector != g_nextSector || now - g_lastLoadLine >= std::chrono::milliseconds(250))
+        {
             blackbox::event("[load] disc sector %u, %u sectors, into 0x%x (ra 0x%x)", sector, count, GPR_U32(ctx, 6), GPR_U32(ctx, 31));
+            g_lastLoadLine = now;
+        }
         g_nextSector = sector + count;
         g_cdRead(rdram, ctx, rt);
     }

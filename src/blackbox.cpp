@@ -9,6 +9,7 @@
 #include <atomic>
 #include <cctype>
 #include <chrono>
+#include <cmath>
 #include <csignal>
 #include <cstdarg>
 #include <cstdlib>
@@ -330,6 +331,48 @@ namespace blackbox
             return count;
         }
 
+        // The frame rate in words: on a still screen, or one that looks fine, the pictures cannot show a slowdown.
+        void writeSpeedLine(FILE *f, const std::vector<Second> &secs, double best, double sinceLastFrame)
+        {
+            if (sinceLastFrame >= 1.0)
+            {
+                std::fprintf(f, "speed: NO NEW FRAME for %.1f s (best %.0f/s)\n", sinceLastFrame, best);
+                return;
+            }
+            const double limit = g_cfg.slowBelowPerSecond > 0.0 ? g_cfg.slowBelowPerSecond : best * 0.8;
+            // The newest drop of at least 2 seconds in the last 30, and whether it is still going on.
+            int low = 0;
+            double sum = 0.0, until = 0.0;
+            bool goingOn = false;
+            for (auto it = secs.rbegin(); it != secs.rend() && it->t >= secs.back().t - 30.0; ++it)
+            {
+                if (it->fps < limit && it->fps >= 1.0f)
+                {
+                    if (!low)
+                    {
+                        until = it->t;
+                        goingOn = it == secs.rbegin();
+                    }
+                    ++low;
+                    sum += it->fps;
+                }
+                else if (low >= 2)
+                    break;
+                else
+                {
+                    low = 0;
+                    sum = 0.0;
+                }
+            }
+            if (low >= 2 && goingOn)
+                std::fprintf(f, "speed: SLOW NOW, about %.0f frames/s for the last %d s, against a best of %.0f/s (%.0f%%). The pictures can look normal: this line is what tells it\n",
+                             sum / low, low, best, 100.0 * sum / low / best);
+            else if (low >= 2)
+                std::fprintf(f, "speed: normal now, %.0f frames/s; it dropped to about %.0f/s for %d s, until %.1f s (best %.0f/s)\n", secs.back().fps, sum / low, low, until, best);
+            else
+                std::fprintf(f, "speed: normal, no drop in the last 30 s (best %.0f/s)\n", best);
+        }
+
         // A few hundred tokens to read together with the sheets: what images alone cannot tell
         // (a long load or a freeze, a slowdown, the inputs, the errors).
         void writeSummary(const std::string &folder, const char *reason, uint64_t count)
@@ -340,7 +383,7 @@ namespace blackbox
             const double t = now();
             const uint64_t first = count > kLogLines ? count - kLogLines : 0;
             auto lineAt = [](uint64_t i) -> const LogLine & { return g_logCopy[static_cast<size_t>(i % kLogLines)]; };
-            std::fprintf(f, "BLACK BOX SUMMARY. Read it with the sheets. Times: seconds since the game started; #N: frame number, as on the tiles.\n");
+            std::fprintf(f, "IRIS INSIGHT SUMMARY. Read it with the sheets. Times: seconds since the program started; #N: frame number, as on the tiles.\n");
             const double at = g_saveStartedAt > 0.0 ? g_saveStartedAt : t; // the moment described; later times are the save itself
             std::fprintf(f, "reason: %s; saved at #%llu, %.2f s (writing the files took %.1f s)\n", reason, static_cast<unsigned long long>(g_saveStartFrame), at, t - at);
             if (g_crashText[0])
@@ -366,6 +409,7 @@ namespace blackbox
             }
             std::fprintf(f, "frames shown: %.1f/s in the last second, best %.1f/s; last frame %.1f s before the save\n",
                          secs.empty() ? 0.0 : secs.back().fps, g_bestRate.load(), std::max(0.0, at - lastFrameAt));
+            writeSpeedLine(f, secs, g_bestRate.load(), at - lastFrameAt);
             if (g_cfg.progress)
             {
                 int still = 0;
@@ -380,11 +424,11 @@ namespace blackbox
                     ++still;
                 }
                 if (!g_progressMoved.load())
-                    std::fprintf(f, "game logic (%s): the counter never moved\n", g_cfg.progressName);
+                    std::fprintf(f, "logic (%s): the counter never moved\n", g_cfg.progressName);
                 else if (still > 0)
-                    std::fprintf(f, "game logic (%s per second): STOPPED, 0 for the last %d s (%.0f/s before)\n", g_cfg.progressName, still, before);
+                    std::fprintf(f, "logic (%s per second): STOPPED, 0 for the last %d s (%.0f/s before)\n", g_cfg.progressName, still, before);
                 else
-                    std::fprintf(f, "game logic (%s per second): running, %.0f in the last second\n", g_cfg.progressName, before);
+                    std::fprintf(f, "logic (%s per second): running, %.0f in the last second\n", g_cfg.progressName, before);
             }
             if (g_cfg.loadingLinesStartingWith)
             {
@@ -404,10 +448,12 @@ namespace blackbox
                 }
                 if (last < 0.0)
                     std::fprintf(f, "loading: no read in the log\n");
-                else if (at - last < 2.0)
+                else if (at - last < 2.0 && reads >= g_cfg.loadingMinReads && last - from >= g_cfg.loadingMinSeconds)
                     std::fprintf(f, "loading: YES, reads going on for %.1f s (%d since %.2f s)\n", at - from, reads, from);
+                else if (at - last < 2.0)
+                    std::fprintf(f, "loading: no, only %d read%s around %.2f s (a load means reads that continue)\n", reads, reads == 1 ? "" : "s", last);
                 else
-                    std::fprintf(f, "loading: no, no read for the last %.1f s (the last group: %d reads, %.2f-%.2f s)\n", at - last, reads, from, last);
+                    std::fprintf(f, "loading: no, no read for the last %.1f s (the last group: %d read%s, %.2f-%.2f s)\n", at - last, reads, reads == 1 ? "" : "s", from, last);
             }
             if (g_cfg.scene)
             {
@@ -1036,7 +1082,7 @@ namespace blackbox
         void onExit()
         {
             if (!g_clean.load())
-                fatal("exit", "exit() was called while the game was running");
+                fatal("exit", "exit() was called while the program was running");
         }
     }
 
