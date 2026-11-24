@@ -126,9 +126,9 @@ Weak points: only two cases, both simulated, 3 tries each. One try on the slowdo
 - 2 November 2026: version 0.1.0: clearer loading and speed lines, usable in any C++17 program, third test.
 - Next: support for more programs.
 
-## Part of F-AGI
+## Part of Fake AGI
 
-Iris Insight works on its own: you do not need anything else. It is also one module of [F-AGI](https://github.com/Korvonordico/f-agi), a set of tools that work together around an AI agent.
+Iris Insight works on its own: you do not need anything else. It is also one module of [Fake AGI](https://github.com/Korvonordico/fake-agi), a set of tools that work together around an AI agent.
 
 - Module used to build it: [Token Tranche](https://github.com/Korvonordico/quotient-claude-tokens) (today still called Quotient), prudence & measure.
 - Built with Iris Insight: [Shadow of Rome PC port](https://github.com/Korvonordico/shadow-of-rome-recompiled).
